@@ -7,7 +7,8 @@ public class Generator : MonoBehaviour {
 	public int width = 50;
 	public int height = 50;
 
-	public GameObject[,] tileGrid;
+	public static GameObject[,] tileGridGameObjects;
+    public static Tile[,] tileGrid;
 
 	public float seed;
 
@@ -19,6 +20,9 @@ public class Generator : MonoBehaviour {
 
 	public float waterChance = 1f;
 
+    int xIndexPos;
+    int yIndexPos;
+
 	void Start ()
 	{
 		if (seed == 0f)
@@ -26,7 +30,7 @@ public class Generator : MonoBehaviour {
 			GenerateSeed ();
 		}
 
-		tileGrid = new GameObject[width, height];
+		tileGridGameObjects = new GameObject[width, height];
 
 		GenerateWorld ();
 	}
@@ -38,17 +42,23 @@ public class Generator : MonoBehaviour {
 			DestroyMap ();
 			GenerateSeed ();
 			GenerateWorld ();
+            GetTileArray();
+            GroupLandTiles();
 		}
 	}
 
-	void SetScale ()
+	void GetTileArray ()
 	{
-
+        foreach(GameObject go in tileGridGameObjects)
+        {
+            Tile tile = go.GetComponent<Tile>();
+            tileGrid[tile.x, tile.y] = tile;
+        }
 	}
 
 	void DestroyMap ()
 	{
-		foreach(GameObject go in tileGrid)
+		foreach(GameObject go in tileGridGameObjects)
 		{
 			Destroy (go);
 		}
@@ -59,55 +69,72 @@ public class Generator : MonoBehaviour {
 		seed = Random.Range (0f, 1f);
 	}
 
-	void GenerateWorld ()
+    //NOTE: USE -1 IN ARRAYS
+    private void GroupLandTiles()
+    {
+        for (int x = 0; x < tileGridGameObjects.GetLength(0); x++)
+        {
+            for (int y = 0; y < tileGridGameObjects.GetLength(1); y++)
+            {
+                //Sets the index positions in the array correctly, as GetLength will get the length, rather than last index. Increases readability
+                xIndexPos = x--;
+                yIndexPos = y--;
+            }
+        }
+    }
+
+    void GenerateWorld ()
 	{
 		for (int x = 0; x < width; x++)
 		{
 			for (int y = 0; y < height; y++)
 			{
-				perlinNoise = Mathf.PerlinNoise (seed + (x * width/25), seed + (y * height/25));
+				perlinNoise = Mathf.PerlinNoise (seed + (x * 500f), seed + (y * 500f));
 				float thisWaterChance = waterChance;
-
-				if (x < width / 5)
-				{
-					if (x != 0)
-					{
-						thisWaterChance = waterChance * ((x + 1) / x);
-					}
-					else
-					{
-						thisWaterChance = 1f;
-					}
-				}
-				else if (y < width / 5)
-				{
-					if (y != 0)
-					{ 
-						thisWaterChance = waterChance * ((y + 1) / y);
-					}
-					else
-					{
-						thisWaterChance = 1f;
-					}
-				}
-				else if (x > width - (width / 5))
-				{
-					
-				}
-				else if (y > width - (width / 5))
-				{
-					
-				}
 
 				if (perlinNoise < thisWaterChance)
 				{
-					tileGrid[x, y] = Instantiate (waterTile, new Vector2 (x, y), Quaternion.identity);
+					tileGridGameObjects[x, y] = Instantiate (waterTile, new Vector2 (x, y), Quaternion.identity);
+
+                    Tile tile = tileGridGameObjects[x, y].GetComponent<Tile>();
+                    tile.tileType = Tile.TileType.water;
+                    tile.x = x;
+                    tile.y = y;
 				}
 				else
 				{
-					tileGrid[x,y] = Instantiate (dirtTile, new Vector2 (x, y), Quaternion.identity);
-				}
+					tileGridGameObjects[x,y] = Instantiate (dirtTile, new Vector2 (x, y), Quaternion.identity);
+
+                    Tile tile = tileGridGameObjects[x, y].GetComponent<Tile>();
+                    tile.tileType = Tile.TileType.dirt;
+                    tile.x = x;
+                    tile.y = y;
+                }
 			}
 		}
 	}
+
+    int GetNeighourTilesOfType(Tile tile, Tile.TileType tileType)
+    {
+        int neighourTilesOfCorrectType = 0;
+
+        //
+
+        return neighourTilesOfCorrectType;
+    }
+
+    Tile[] GetNeighourTiles(Tile tile)
+    {
+        List<Tile> neighbouringTilesList = new List<Tile>();
+
+        Tile[] neighbouringTilesArray = new Tile[neighbouringTilesList.Count];
+
+        int arrayPos = 0;
+
+        foreach (Tile t in neighbouringTilesList)
+        {
+            neighbouringTilesArray[arrayPos] = t;
+            arrayPos++;
+        }
+    }
 }
