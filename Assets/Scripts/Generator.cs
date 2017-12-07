@@ -7,8 +7,8 @@ public class Generator : MonoBehaviour {
 	public int width = 50;
 	public int height = 50;
 
-	public static GameObject[,] tileGridGameObjects;
-    public static Tile[,] tileGrid;
+	public GameObject[,] tileGridGameObjects;
+    public Tile[,] tileGrid;
 
 	public float seed;
 
@@ -31,6 +31,7 @@ public class Generator : MonoBehaviour {
 		}
 
 		tileGridGameObjects = new GameObject[width, height];
+        tileGrid = new Tile[width, height];
 
 		GenerateWorld ();
 	}
@@ -46,16 +47,19 @@ public class Generator : MonoBehaviour {
             GroupLandTiles();
 		}
 	}
-
+    
 	void GetTileArray ()
 	{
-        foreach(GameObject go in tileGridGameObjects)
+        for (int x = 0; x < tileGridGameObjects.Length; x++)
         {
-            Tile tile = go.GetComponent<Tile>();
-            tileGrid[tile.x, tile.y] = tile;
+            for (int y = 0; y < tileGridGameObjects.Length; y++)
+            {
+                Tile tile = tileGridGameObjects[x, y].GetComponent<Tile>();
+                tileGrid[tile.x, tile.y] = tile;
+            }
         }
 	}
-
+    
 	void DestroyMap ()
 	{
 		foreach(GameObject go in tileGridGameObjects)
@@ -94,25 +98,45 @@ public class Generator : MonoBehaviour {
 
 				if (perlinNoise < thisWaterChance)
 				{
-					tileGridGameObjects[x, y] = Instantiate (waterTile, new Vector2 (x, y), Quaternion.identity);
-
-                    Tile tile = tileGridGameObjects[x, y].GetComponent<Tile>();
-                    tile.tileType = Tile.TileType.water;
-                    tile.x = x;
-                    tile.y = y;
-				}
+                    GenerateTile(x, y, Tile.TileType.water);
+                }
 				else
 				{
-					tileGridGameObjects[x,y] = Instantiate (dirtTile, new Vector2 (x, y), Quaternion.identity);
-
-                    Tile tile = tileGridGameObjects[x, y].GetComponent<Tile>();
-                    tile.tileType = Tile.TileType.dirt;
-                    tile.x = x;
-                    tile.y = y;
+					GenerateTile(x, y, Tile.TileType.dirt);
                 }
 			}
 		}
+        
+        SetNeighbourTiles();
 	}
+
+    void GenerateTile(int x, int y, Tile.TileType tileType)
+    {
+        switch (tileType) {
+            case Tile.TileType.water:
+            tileGridGameObjects[x, y] = Instantiate(waterTile, new Vector2(x, y), Quaternion.identity);
+                break;
+
+            case Tile.TileType.dirt:
+                tileGridGameObjects[x, y] = Instantiate(dirtTile, new Vector2(x, y), Quaternion.identity);
+                break;
+        }
+
+        Tile tile = tileGridGameObjects[x, y].GetComponent<Tile>();
+        tileGrid[x, y] = tile;
+
+        tile.tileType = tileType;
+        tile.x = x;
+        tile.y = y;
+    }
+
+    void SetNeighbourTiles()
+    {
+        foreach (Tile tile in tileGrid)
+        {
+            tile.neighbourTiles = GetNeighourTiles(tile);
+        }
+    }
 
     int GetNeighourTilesOfType(Tile tile, Tile.TileType tileType)
     {
@@ -127,14 +151,19 @@ public class Generator : MonoBehaviour {
     {
         List<Tile> neighbouringTilesList = new List<Tile>();
 
-        Tile[] neighbouringTilesArray = new Tile[neighbouringTilesList.Count];
-
-        int arrayPos = 0;
-
-        foreach (Tile t in neighbouringTilesList)
+        foreach (Tile t in tileGrid)
         {
-            neighbouringTilesArray[arrayPos] = t;
-            arrayPos++;
+            if (t.x == tile.x       && t.y == tile.y + 1 ||
+                t.x == tile.x + 1   &&  t.y == tile.y ||
+                t.x == tile.x       && t.y == tile.y - 1 ||
+                t.x == tile.x - 1   && t.y == tile.y)
+            {
+                neighbouringTilesList.Add(t);
+            }
         }
+
+        Tile[] neighbouringTilesArray = neighbouringTilesList.ToArray();
+
+        return neighbouringTilesArray;
     }
 }
