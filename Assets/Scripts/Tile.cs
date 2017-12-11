@@ -9,4 +9,9 @@ public class Tile : MonoBehaviour {
     public Tile[] neighbourTiles = new Tile[4];
     public int x;
     public int y;
+
+    public Tile neighbourTileUp;
+    public Tile neighbourTileDown;
+    public Tile neighbourTileLeft;
+    public Tile neighbourTileRight;
 }
