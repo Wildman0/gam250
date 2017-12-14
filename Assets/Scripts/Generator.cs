@@ -8,7 +8,7 @@ public class Generator : MonoBehaviour {
 	public int height = 50;
 
 	public GameObject[,] tileGridGameObjects;
-    public Tile[,] tileGrid;
+    public static Tile[,] tileGrid;
 
 	public float seed;
 
@@ -22,10 +22,16 @@ public class Generator : MonoBehaviour {
     public int edgeWaterFactor = 5;
     public int smoothFactor = 5;
 
-    public Material[] terrainMaterials;
+	public Material[] _terrainMaterials;
+	public static Material[] terrainMaterials;
 
     int xIndexPos;
     int yIndexPos;
+
+	void Awake ()
+	{
+		terrainMaterials = _terrainMaterials;
+	}
 
     //Generates a new seed and instantiates arrays
 	void Start ()
@@ -52,9 +58,15 @@ public class Generator : MonoBehaviour {
             AddWaterAtEdges();
             GetTileArray();
             GroupLandTiles(smoothFactor);
+			TestCrap ();
 		}
 	}
     
+	void TestCrap ()
+	{
+		LandmassFinder.FloodFillLandmass (tileGrid[23, 23]);
+	}
+
     //Gets all of the tile components from the tiles and stores them in an array
 	void GetTileArray ()
 	{
@@ -100,13 +112,13 @@ public class Generator : MonoBehaviour {
             {
                 for (int y = 0; y < yLength; y++)
                 {
-                    if (GetNeighourTilesOfType(tileGrid[x, y], Tile.TileType.dirt) >= 3)
+                    if (GetNeighourTilesOfType(tileGrid[x, y], Tile.Type.dirt).Length >= 3)
                     {
-                        ChangeTileType(tileGrid[x, y], Tile.TileType.dirt);
+                        ChangeTileType(tileGrid[x, y], Tile.Type.dirt);
                     }
-                    else if (GetNeighourTilesOfType(tileGrid[x, y], Tile.TileType.water) == 4)
+                    else if (GetNeighourTilesOfType(tileGrid[x, y], Tile.Type.water).Length == 4)
                     {
-                        ChangeTileType(tileGrid[x, y], Tile.TileType.water);
+                        ChangeTileType(tileGrid[x, y], Tile.Type.water);
                     }
                 }
             }
@@ -124,11 +136,11 @@ public class Generator : MonoBehaviour {
 
                 if (Random.Range(0f, 1.2f) < tileDistanceFromCenter)
                 {
-                    ChangeTileType(tile, Tile.TileType.water);
+                    ChangeTileType(tile, Tile.Type.water);
                 }
                 else if (Random.Range(0f, 0.2f) < tileDistanceFromCenter)
                 {
-                    ChangeTileType(tile, Tile.TileType.dirt);
+                    ChangeTileType(tile, Tile.Type.dirt);
                 }
 
                 float tileDistanceFromCenterX = XDistanceToCenterRatio(tile);
@@ -136,11 +148,11 @@ public class Generator : MonoBehaviour {
 
                 if (Random.Range (0f, 1.2f) < tileDistanceFromCenterX)
                 {
-                    ChangeTileType(tile, Tile.TileType.water);
+                    ChangeTileType(tile, Tile.Type.water);
                 }
                 else if (Random.Range(0f, 1.2f) < tileDistanceFromCenterY)
                 {
-                    ChangeTileType(tile, Tile.TileType.water);
+                    ChangeTileType(tile, Tile.Type.water);
                 }
             }
         }
@@ -217,11 +229,11 @@ public class Generator : MonoBehaviour {
 
 				if (perlinNoise < thisWaterChance)
 				{
-                    GenerateTile(x, y, Tile.TileType.water);
+                    GenerateTile(x, y, Tile.Type.water);
                 }
 				else
 				{
-					GenerateTile(x, y, Tile.TileType.dirt);
+					GenerateTile(x, y, Tile.Type.dirt);
                 }
 			}
 		}
@@ -230,14 +242,14 @@ public class Generator : MonoBehaviour {
 	}
 
     //Generates a tile at the correct position and sets some of its data
-    void GenerateTile(int x, int y, Tile.TileType tileType)
+    void GenerateTile(int x, int y, Tile.Type tileType)
     {
         switch (tileType) {
-            case Tile.TileType.water:
+            case Tile.Type.water:
             tileGridGameObjects[x, y] = Instantiate(waterTile, new Vector2(x, y), Quaternion.identity);
                 break;
 
-            case Tile.TileType.dirt:
+            case Tile.Type.dirt:
                 tileGridGameObjects[x, y] = Instantiate(dirtTile, new Vector2(x, y), Quaternion.identity);
                 break;
         }
@@ -251,17 +263,17 @@ public class Generator : MonoBehaviour {
     }
 
     //Changes a tiles properties and material to the desired
-    void ChangeTileType(Tile tile, Tile.TileType tileType)
+    void ChangeTileType(Tile tile, Tile.Type tileType)
     {
         tile.tileType = tileType;
 
         switch (tileType)
         {
-            case Tile.TileType.water:
+            case Tile.Type.water:
                 tile.gameObject.GetComponent<Renderer>().material = terrainMaterials[0];
                 break;
 
-            case Tile.TileType.dirt:
+            case Tile.Type.dirt:
                 tile.gameObject.GetComponent<Renderer>().material = terrainMaterials[1];
                 break;
         }
@@ -277,19 +289,19 @@ public class Generator : MonoBehaviour {
     }
 
     //returns the numer of tiles of the type being checked for 
-    int GetNeighourTilesOfType(Tile tile, Tile.TileType tileType)
+    public static Tile[] GetNeighourTilesOfType(Tile tile, Tile.Type tileType)
     {
-        int neighourTilesOfCorrectType = 0;
+        List<Tile> neighourTilesOfCorrectType =  new List<Tile>();
 
         foreach (Tile t in tile.neighbourTiles)
         {
             if (t.tileType == tileType)
             {
-                neighourTilesOfCorrectType++;
+				neighourTilesOfCorrectType.Add (t);
             }
         }
 
-        return neighourTilesOfCorrectType;
+        return neighourTilesOfCorrectType.ToArray();
     }
 
     //Gets the neighbours of a tile, setting them in an array as well as in a single variable (for readability later down the line)
