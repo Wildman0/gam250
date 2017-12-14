@@ -22,9 +22,9 @@ public class Generator : MonoBehaviour {
 	public GameObject dirtTile;	//Dirt tile prefab
 	public GameObject waterTile;	//Water tile prefab
 
-	public float waterChance = 0.5f;	//How difficult it is for water to spawn, default 0.5 (Range 0-1)
-    public int edgeWaterFactor = 5;	//Number of passes made for culling land tiles around the outside edges of the map (Def. 5)
-    public int smoothFactor = 5;	//Number of passes made for smoothing out the map (Def. 5)
+	public static float waterChance = 0.5f;	//How difficult it is for water to spawn, default 0.5 (Range 0-1)
+    public static int edgeWaterFactor = 5;	//Number of passes made for culling land tiles around the outside edges of the map (Def. 5)
+    public static int smoothFactor = 5;	//Number of passes made for smoothing out the map (Def. 5)
 
 	public Material[] _terrainMaterials;
 	public static Material[] terrainMaterials;	//Instanced and static versions of the materials for the terrain
