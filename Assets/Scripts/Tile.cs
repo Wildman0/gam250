@@ -9,19 +9,20 @@ using UnityEngine;
 public class Tile : MonoBehaviour {
 
     public enum Type { dirt, water };
-    public Type tileType;
-    public Tile[] neighbourTiles = new Tile[4];
+    public Type tileType;	//The type of tile this is
+    public Tile[] neighbourTiles = new Tile[4];	//An array of this tile's neighbours
     public int x;
-    public int y;
+    public int y;	//Coordinates
 
     public Tile neighbourTileUp;
     public Tile neighbourTileDown;
     public Tile neighbourTileLeft;
-    public Tile neighbourTileRight;
+    public Tile neighbourTileRight;	//Individual neighbour tiles
 
-	public bool checkedForLandmass;
-	public bool checkedNeighbours;
+	public bool checkedForLandmass;	//Has this tile checked for the landmass it's a part of?
+	public bool checkedNeighbours;	//Has this tile checked if it's neighbours are a part of the same landmass?
 
+	//Changes the tiles type and material to the desired type
 	public void ChangeTileType(Type type)
 	{
 		switch (type)

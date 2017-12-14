@@ -27,6 +27,7 @@ public class LandmassFinder : MonoBehaviour {
 		}
 	}
 
+	//Clears previous values held on tiles to prevent results from the last run from leaking
 	static void ClearPreviousValues ()
 	{
 		foreach (Tile tile in Generator.tileGrid)
@@ -42,6 +43,7 @@ public class LandmassFinder : MonoBehaviour {
 		Queue<Tile> tilesToCheck = new Queue<Tile> ();
 		List<Tile> tilesInLandmass = new List<Tile> ();
 
+		//Starts with the starting tile and expands from there
 		tilesInLandmass.Add (startingTile);
 		tilesToCheck.Enqueue (startingTile);
 
@@ -51,17 +53,21 @@ public class LandmassFinder : MonoBehaviour {
 			Tile t = tilesToCheck.Peek ();
 			if (t.tileType == Tile.Type.dirt)
 			{
+				//Checks if it contains this tile before adding it (May or may not happen, just there for safety)
 				if (!tilesInLandmass.Contains (t))
 				{
 					tilesInLandmass.Add (t);
 				}
 
+				//Lets the tile know that it's checked these things
 				t.checkedForLandmass = true;
 				t.checkedNeighbours = true;
 			}
 			
+			//Gets neighbouring tiles made of dirt
 			Tile[] neighbouringLandTiles = tilesToCheck.Dequeue ().GetNeighourTilesOfType (Tile.Type.dirt);
 
+			//Checks these tiles to see if their neighbours are part of the landmass
 			foreach (Tile tile in neighbouringLandTiles)
 			{
 				if (tile.checkedForLandmass == false)
@@ -83,6 +89,7 @@ public class LandmassFinder : MonoBehaviour {
 				}
 			}
 
+			//Loops through again if the entire landmass hasn't been discovered
 			if (tilesToCheck.Count != 0)
 			{
 				i--;

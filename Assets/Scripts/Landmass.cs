@@ -36,9 +36,4 @@ public class Landmass {
 	{
 		return tiles.ToArray ();
 	}
-
-	public void Reset ()
-	{
-		tiles.Clear ();
-	}
 }
