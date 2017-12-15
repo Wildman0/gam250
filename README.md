@@ -2,6 +2,7 @@
 
 # Important Notes:
 
+- Press space to generate maps
 - The larger the map size, the more likely that it will only spawn water
 - When using the tool set default values before anything else
 
