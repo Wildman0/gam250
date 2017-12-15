@@ -43,12 +43,6 @@ public class Generator : MonoBehaviour {
 		{
 			GenerateSeed ();
 		}
-
-		//Creates new arrays to store gameObject/tiledata in
-		tileGridGameObjects = new GameObject[width, height];
-        tileGrid = new Tile[width, height];
-
-		GenerateMap ();
 	}
 	
 	void Update ()
@@ -62,6 +56,8 @@ public class Generator : MonoBehaviour {
 	//Runs all of the methods used to generate a map in the correct order
 	void GenerateMap ()
 	{
+		Debug.Log (width + "/" + height + "/" + waterChance + "/" + edgeWaterFactor + "/" + smoothFactor);
+		CreateArrays ();
 		GenerateSeed ();
 		GenerateWorld ();
 		AddWaterAtEdges ();
@@ -70,10 +66,20 @@ public class Generator : MonoBehaviour {
 		CreateLandmass ();
 	}
 
+	//Creates new arrays to store gameObject/tiledata in
+	void CreateArrays ()
+	{
+		if (tileGrid == null)
+		{
+			tileGridGameObjects = new GameObject[width, height];
+			tileGrid = new Tile[width, height];
+		}
+	}
+
 	//Creates the main landmass and culls other landmasses not in close proximity in order to prevent random noise
 	void CreateLandmass ()
 	{
-		LandmassFinder.FloodFillLandmass (tileGrid[23, 23]);
+		LandmassFinder.FloodFillLandmass (tileGrid[width/2, height/2]);
 	}
 
     //Gets all of the tile components from the tiles and stores them in an array
