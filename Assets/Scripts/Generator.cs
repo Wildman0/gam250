@@ -2,32 +2,34 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Main map generator class
+/// </summary>
+
 public class Generator : MonoBehaviour {
 
-	public int width = 50;
-	public int height = 50;
+	public static int width = 50;	//Map width
+	public static int height = 50;	//Map height
 
-	public GameObject[,] tileGridGameObjects;
-    public static Tile[,] tileGrid;
+	public GameObject[,] tileGridGameObjects;	//An array of gameObjects in the map
+    public static Tile[,] tileGrid;	//An array of the tile components stored on the above gameObjects
 
-	public float seed;
+	public float seed;	//Random seed for the perlin noise	
 
 	public Vector2 perlinData;
-	public float perlinNoise;
+	public float perlinNoise;	//Store the perlin noise map and individual points on the map
 
-	public GameObject dirtTile;
-	public GameObject waterTile;
+	public GameObject dirtTile;	//Dirt tile prefab
+	public GameObject waterTile;	//Water tile prefab
 
-	public float waterChance = 1f;
-    public int edgeWaterFactor = 5;
-    public int smoothFactor = 5;
+	public static float waterChance = 0.5f;	//How difficult it is for water to spawn, default 0.5 (Range 0-1)
+    public static int edgeWaterFactor = 5;	//Number of passes made for culling land tiles around the outside edges of the map (Def. 5)
+    public static int smoothFactor = 5;	//Number of passes made for smoothing out the map (Def. 5)
 
 	public Material[] _terrainMaterials;
-	public static Material[] terrainMaterials;
+	public static Material[] terrainMaterials;	//Instanced and static versions of the materials for the terrain
 
-    int xIndexPos;
-    int yIndexPos;
-
+	//Sets terrain materials based on inspector values
 	void Awake ()
 	{
 		terrainMaterials = _terrainMaterials;
@@ -36,39 +38,52 @@ public class Generator : MonoBehaviour {
     //Generates a new seed and instantiates arrays
 	void Start ()
 	{
+		//Generates new seed if it's null
 		if (seed == 0f)
 		{
 			GenerateSeed ();
 		}
-
-		tileGridGameObjects = new GameObject[width, height];
-        tileGrid = new Tile[width, height];
-
-		GenerateWorld ();
 	}
-
-    //For demonstration purposes
+	
 	void Update ()
 	{
 		if (Input.GetKeyDown (KeyCode.Space))
 		{
-			DestroyMap ();
-			GenerateSeed ();
-			GenerateWorld ();
-            AddWaterAtEdges();
-            GetTileArray();
-            GroupLandTiles(smoothFactor);
-			TestCrap ();
+			GenerateMap ();	
 		}
 	}
     
-	void TestCrap ()
+	//Runs all of the methods used to generate a map in the correct order
+	void GenerateMap ()
 	{
-		LandmassFinder.FloodFillLandmass (tileGrid[23, 23]);
+		Debug.Log (width + "/" + height + "/" + waterChance + "/" + edgeWaterFactor + "/" + smoothFactor);
+		CreateArrays ();
+		GenerateSeed ();
+		GenerateWorld ();
+		AddWaterAtEdges ();
+		FillTileArray ();
+		GroupLandTiles (smoothFactor);
+		CreateLandmass ();
+	}
+
+	//Creates new arrays to store gameObject/tiledata in
+	void CreateArrays ()
+	{
+		if (tileGrid == null)
+		{
+			tileGridGameObjects = new GameObject[width, height];
+			tileGrid = new Tile[width, height];
+		}
+	}
+
+	//Creates the main landmass and culls other landmasses not in close proximity in order to prevent random noise
+	void CreateLandmass ()
+	{
+		LandmassFinder.FloodFillLandmass (tileGrid[width/2, height/2]);
 	}
 
     //Gets all of the tile components from the tiles and stores them in an array
-	void GetTileArray ()
+	void FillTileArray ()
 	{
         int xLength = tileGridGameObjects.GetLength(0);
         int yLength = tileGridGameObjects.GetLength(1);
@@ -83,19 +98,9 @@ public class Generator : MonoBehaviour {
         }
 	}
     
-    //Destroys the map
-	void DestroyMap ()
-	{
-		foreach(GameObject go in tileGridGameObjects)
-		{
-			Destroy (go);
-		}
-	}
-
     //Generates a random seed
 	void GenerateSeed ()
 	{
-        //seed = Random.Range (0f, 1f);
         seed = System.DateTime.Now.Millisecond;
 
     }
@@ -106,19 +111,20 @@ public class Generator : MonoBehaviour {
         int xLength = tileGridGameObjects.GetLength(0);
         int yLength = tileGridGameObjects.GetLength(1);
 
+		//Culls tiles based on their surrounding tiles, changing them to similar tiles
         for (int i = 0; i < smoothFactor; i++)
         {
             for (int x = 0; x < xLength; x++)
             {
                 for (int y = 0; y < yLength; y++)
                 {
-                    if (GetNeighourTilesOfType(tileGrid[x, y], Tile.Type.dirt).Length >= 3)
+                    if (tileGrid[x, y].GetNeighourTilesOfTypeNumber (Tile.Type.dirt) >= 3)
                     {
-                        ChangeTileType(tileGrid[x, y], Tile.Type.dirt);
+						tileGrid[x, y].ChangeTileType(Tile.Type.dirt);
                     }
-                    else if (GetNeighourTilesOfType(tileGrid[x, y], Tile.Type.water).Length == 4)
+                    else if (tileGrid[x, y].GetNeighourTilesOfTypeNumber (Tile.Type.water) == 4)
                     {
-                        ChangeTileType(tileGrid[x, y], Tile.Type.water);
+						tileGrid[x, y].ChangeTileType(Tile.Type.water);
                     }
                 }
             }
@@ -132,91 +138,32 @@ public class Generator : MonoBehaviour {
         {
             foreach (Tile tile in tileGrid)
             {
-                float tileDistanceFromCenter = DistanceToCenterRatio(tile);
+                float tileDistanceFromCenter = tile.DistanceToCenterRatio();
 
                 if (Random.Range(0f, 1.2f) < tileDistanceFromCenter)
                 {
-                    ChangeTileType(tile, Tile.Type.water);
+                    tile.ChangeTileType(Tile.Type.water);
                 }
                 else if (Random.Range(0f, 0.2f) < tileDistanceFromCenter)
                 {
-                    ChangeTileType(tile, Tile.Type.dirt);
+                    tile.ChangeTileType(Tile.Type.dirt);
                 }
 
-                float tileDistanceFromCenterX = XDistanceToCenterRatio(tile);
-                float tileDistanceFromCenterY = YDistanceToCenterRatio(tile);
+                float tileDistanceFromCenterX = tile.XDistanceToCenterRatio ();
+                float tileDistanceFromCenterY = tile.YDistanceToCenterRatio ();
 
                 if (Random.Range (0f, 1.2f) < tileDistanceFromCenterX)
                 {
-                    ChangeTileType(tile, Tile.Type.water);
+                    tile.ChangeTileType(Tile.Type.water);
                 }
                 else if (Random.Range(0f, 1.2f) < tileDistanceFromCenterY)
                 {
-                    ChangeTileType(tile, Tile.Type.water);
+                    tile.ChangeTileType(Tile.Type.water);
                 }
             }
         }
     }
-
-    //Produces a ratio between 0 and 1 of how close this tile is to the center of the map
-    float DistanceToCenterRatio (Tile tile)
-    {
-        Tile centerTile = tileGrid[Mathf.RoundToInt(width / 2), Mathf.RoundToInt(height / 2)];
-        
-        float distanceToCenterRatio;
-        float distanceFromCenterX = tile.x - centerTile.x;
-        float distanceFromCenterY = tile.y - centerTile.y;
-
-        //Inverts negative values
-        if (distanceFromCenterX < 0)
-        {
-            distanceFromCenterX = distanceFromCenterX * -1;
-        }
-        if (distanceFromCenterY < 0)
-        {
-            distanceFromCenterY = distanceFromCenterY * -1;
-        }
-
-        distanceToCenterRatio = (distanceFromCenterX + distanceFromCenterY) / ((width + height) / 2);
-        return distanceToCenterRatio;
-    }
-
-    //Produces a ratio between 0 and 1 of how close this tile is to the center of the map on the x axis
-    float XDistanceToCenterRatio(Tile tile)
-    {
-        Tile centerTile = tileGrid[Mathf.RoundToInt(width / 2), Mathf.RoundToInt(height / 2)];
-
-        float distanceToCenterRatio;
-        float distanceFromCenterX = tile.x - centerTile.x;
-
-        //Inverts negative values
-        if (distanceFromCenterX < 0)
-        {
-            distanceFromCenterX = distanceFromCenterX * -1;
-        }
-
-        distanceToCenterRatio = (distanceFromCenterX) / ((width) / 2);
-        return distanceToCenterRatio;
-    }
-
-    //Produces a ratio between 0 and 1 of how close this tile is to the center of the map on the y axis
-    float YDistanceToCenterRatio(Tile tile)
-    {
-        Tile centerTile = tileGrid[Mathf.RoundToInt(width / 2), Mathf.RoundToInt(height / 2)];
-
-        float distanceToCenterRatio;
-        float distanceFromCenterY = tile.y - centerTile.y;
-
-        //Inverts negative values
-        if (distanceFromCenterY < 0)
-        {
-            distanceFromCenterY = distanceFromCenterY * -1;
-        }
-
-        distanceToCenterRatio = (distanceFromCenterY) / ((height) / 2);
-        return distanceToCenterRatio;
-    }
-
+	
     //Generates a perlin noise map and places tiles corresponding to it
     void GenerateWorld ()
 	{
@@ -225,9 +172,8 @@ public class Generator : MonoBehaviour {
 			for (int y = 0; y < height; y++)
 			{
 				perlinNoise = Mathf.PerlinNoise (seed + (x * 2f), seed + (y * 2f));
-				float thisWaterChance = waterChance;
 
-				if (perlinNoise < thisWaterChance)
+				if (perlinNoise < waterChance)
 				{
                     GenerateTile(x, y, Tile.Type.water);
                 }
@@ -244,103 +190,42 @@ public class Generator : MonoBehaviour {
     //Generates a tile at the correct position and sets some of its data
     void GenerateTile(int x, int y, Tile.Type tileType)
     {
-        switch (tileType) {
-            case Tile.Type.water:
-            tileGridGameObjects[x, y] = Instantiate(waterTile, new Vector2(x, y), Quaternion.identity);
-                break;
+		if (tileGridGameObjects[x, y] == null)
+		{
+			switch (tileType)
+			{
+				case Tile.Type.water:
+					tileGridGameObjects[x, y] = Instantiate (waterTile, new Vector2 (x, y), Quaternion.identity);
+					break;
 
-            case Tile.Type.dirt:
-                tileGridGameObjects[x, y] = Instantiate(dirtTile, new Vector2(x, y), Quaternion.identity);
-                break;
-        }
+				case Tile.Type.dirt:
+					tileGridGameObjects[x, y] = Instantiate (dirtTile, new Vector2 (x, y), Quaternion.identity);
+					break;
+			}
 
-        Tile tile = tileGridGameObjects[x, y].GetComponent<Tile>();
-        tileGrid[x, y] = tile;
+			Tile tile = tileGridGameObjects[x, y].GetComponent<Tile> ();
+			tileGrid[x, y] = tile;
 
-        tile.tileType = tileType;
-        tile.x = x;
-        tile.y = y;
+			tile.tileType = tileType;
+			tile.x = x;
+			tile.y = y;
+		}
+		else
+		{
+			//Changes tile data instead of destroying and reinstantiating
+			if (tileGrid[x, y].tileType != tileType)
+			{
+				tileGrid[x, y].ChangeTileType (tileType);
+			}
+		}
     }
-
-    //Changes a tiles properties and material to the desired
-    void ChangeTileType(Tile tile, Tile.Type tileType)
-    {
-        tile.tileType = tileType;
-
-        switch (tileType)
-        {
-            case Tile.Type.water:
-                tile.gameObject.GetComponent<Renderer>().material = terrainMaterials[0];
-                break;
-
-            case Tile.Type.dirt:
-                tile.gameObject.GetComponent<Renderer>().material = terrainMaterials[1];
-                break;
-        }
-    }
-
-    //Sets the neighbour tiles array in all tiles
+	
+	//Calls the SetNeighbourTiles method on each tile
     void SetNeighbourTiles()
     {
         foreach (Tile tile in tileGrid)
         {
-            tile.neighbourTiles = GetNeighourTiles(tile);
+            tile.SetNeighbourTiles();
         }
-    }
-
-    //returns the numer of tiles of the type being checked for 
-    public static Tile[] GetNeighourTilesOfType(Tile tile, Tile.Type tileType)
-    {
-        List<Tile> neighourTilesOfCorrectType =  new List<Tile>();
-
-        foreach (Tile t in tile.neighbourTiles)
-        {
-            if (t.tileType == tileType)
-            {
-				neighourTilesOfCorrectType.Add (t);
-            }
-        }
-
-        return neighourTilesOfCorrectType.ToArray();
-    }
-
-    //Gets the neighbours of a tile, setting them in an array as well as in a single variable (for readability later down the line)
-    Tile[] GetNeighourTiles(Tile tile)
-    {
-        List<Tile> neighbouringTilesList = new List<Tile>();
-
-        foreach (Tile t in tileGrid)
-        {
-            if (neighbouringTilesList.Count <= 4)
-            {
-                if (t.x == tile.x && t.y == tile.y + 1)
-                {
-                    tile.neighbourTileUp = t;
-                    neighbouringTilesList.Add(t);
-                }
-
-                else if (t.x == tile.x + 1 && t.y == tile.y)
-                {
-                    tile.neighbourTileLeft = t;
-                    neighbouringTilesList.Add(t);
-                }
-
-                else if (t.x == tile.x && t.y == tile.y - 1)
-                {
-                    tile.neighbourTileDown = t;
-                    neighbouringTilesList.Add(t);
-                }
-
-                else if (t.x == tile.x - 1 && t.y == tile.y)
-                {
-                    tile.neighbourTileRight = t;
-                    neighbouringTilesList.Add(t);
-                }
-            }
-        }
-
-        Tile[] neighbouringTilesArray = neighbouringTilesList.ToArray();
-
-        return neighbouringTilesArray;
     }
 }

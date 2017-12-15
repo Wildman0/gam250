@@ -3,16 +3,21 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LandmassFinder : MonoBehaviour {
+/// <summary>
+/// Finds the main landmass and destroys all others
+/// </summary>
 
-	List<Landmass> landmasses = new List<Landmass>();
-	public static Landmass landmass;
+public class LandmassFinder : MonoBehaviour {
+	
+	public static Landmass landmass;	//Instance of landmass to be used to store the main landmass
 
 	//Creates a new landmass and flood fills to work out all containing tiles
 	public static void FloodFillLandmass(Tile startingTile)
 	{
+		ClearPreviousValues ();
 		landmass = new Landmass (FindTilesInLandmass (startingTile));
-		
+
+		//Changes all tiles that aren't in the central or closer surrounding landmasses to water
 		foreach (Tile tile in Generator.tileGrid)
 		{
 			if (!landmass.GetTiles ().Contains(tile))
@@ -22,12 +27,23 @@ public class LandmassFinder : MonoBehaviour {
 		}
 	}
 
-	//NOTES: ONLY RUN AFTER AN IF CHECK TO MAKE SURE THE STARTING TILE IS LAND
+	//Clears previous values held on tiles to prevent results from the last run from leaking
+	static void ClearPreviousValues ()
+	{
+		foreach (Tile tile in Generator.tileGrid)
+		{
+			tile.checkedForLandmass = false;
+			tile.checkedNeighbours = false;
+		}
+	}
+
+	//Flood fills the landmass and returns an array of tiles on that landmass
 	public static Tile[] FindTilesInLandmass(Tile startingTile)
 	{
 		Queue<Tile> tilesToCheck = new Queue<Tile> ();
 		List<Tile> tilesInLandmass = new List<Tile> ();
 
+		//Starts with the starting tile and expands from there
 		tilesInLandmass.Add (startingTile);
 		tilesToCheck.Enqueue (startingTile);
 
@@ -37,17 +53,21 @@ public class LandmassFinder : MonoBehaviour {
 			Tile t = tilesToCheck.Peek ();
 			if (t.tileType == Tile.Type.dirt)
 			{
+				//Checks if it contains this tile before adding it (May or may not happen, just there for safety)
 				if (!tilesInLandmass.Contains (t))
 				{
 					tilesInLandmass.Add (t);
 				}
 
+				//Lets the tile know that it's checked these things
 				t.checkedForLandmass = true;
 				t.checkedNeighbours = true;
 			}
 			
-			Tile[] neighbouringLandTiles = Generator.GetNeighourTilesOfType (tilesToCheck.Dequeue (), Tile.Type.dirt);
+			//Gets neighbouring tiles made of dirt
+			Tile[] neighbouringLandTiles = tilesToCheck.Dequeue ().GetNeighourTilesOfType (Tile.Type.dirt);
 
+			//Checks these tiles to see if their neighbours are part of the landmass
 			foreach (Tile tile in neighbouringLandTiles)
 			{
 				if (tile.checkedForLandmass == false)
@@ -69,6 +89,7 @@ public class LandmassFinder : MonoBehaviour {
 				}
 			}
 
+			//Loops through again if the entire landmass hasn't been discovered
 			if (tilesToCheck.Count != 0)
 			{
 				i--;

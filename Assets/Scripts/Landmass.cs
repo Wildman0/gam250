@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Data class for landmasses
+/// </summary>
+
 public class Landmass {
 
 	private List<Tile> tiles = new List<Tile> ();	//List of tiles in this landmass. Remains private to prevent interference
