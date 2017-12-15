@@ -85,7 +85,7 @@ public class Tile : MonoBehaviour {
 		return neighbouringTilesArray;
 	}
 
-	//returns the numer of tiles of the type being checked for 
+	//returns tiles of the type being checked for 
 	public Tile[] GetNeighourTilesOfType (Type tileType)
 	{
 		List<Tile> tiles = new List<Tile>();
@@ -101,6 +101,22 @@ public class Tile : MonoBehaviour {
 		return tiles.ToArray();
 	}
 
+	//returns the numer of tiles of the type being checked for 
+	public int GetNeighourTilesOfTypeNumber (Type tileType)
+	{
+		int correctType = 0;
+
+		foreach (Tile t in neighbourTiles)
+		{
+			if (t.tileType == tileType)
+			{
+				correctType++;
+			}
+		}
+
+		return correctType;
+	}
+
 	//Produces a ratio between 0 and 1 of how close this tile is to the center of the map
 	public float DistanceToCenterRatio ()
 	{
@@ -108,8 +124,7 @@ public class Tile : MonoBehaviour {
 		int height = Generator.height;
 
 		Tile centerTile = Generator.tileGrid[Mathf.RoundToInt (width / 2), Mathf.RoundToInt (height / 2)];
-
-		float distanceToCenterRatio;
+		
 		float distanceFromCenterX = x - centerTile.x;
 		float distanceFromCenterY = y - centerTile.y;
 
@@ -122,20 +137,15 @@ public class Tile : MonoBehaviour {
 		{
 			distanceFromCenterY = distanceFromCenterY * -1;
 		}
-
-		distanceToCenterRatio = (distanceFromCenterX + distanceFromCenterY) / ((width + height) / 2);
-		return distanceToCenterRatio;
+		
+		return (distanceFromCenterX + distanceFromCenterY) / ((width + height) / 2);
 	}
 
 	//Produces a ratio between 0 and 1 of how close this tile is to the center of the map on the x axis
 	public float XDistanceToCenterRatio ()
 	{
-		int width = Generator.width;
-		int height = Generator.height;
-
-		Tile centerTile = Generator.tileGrid[Mathf.RoundToInt (width / 2), Mathf.RoundToInt (height / 2)];
-
-		float distanceToCenterRatio;
+		Tile centerTile = Generator.tileGrid[Mathf.RoundToInt (Generator.width / 2), Mathf.RoundToInt (Generator.height / 2)];
+		
 		float distanceFromCenterX = x - centerTile.x;
 
 		//Inverts negative values
@@ -143,20 +153,14 @@ public class Tile : MonoBehaviour {
 		{
 			distanceFromCenterX = distanceFromCenterX * -1;
 		}
-
-		distanceToCenterRatio = (distanceFromCenterX) / ((width) / 2);
-		return distanceToCenterRatio;
+		
+		return (distanceFromCenterX) / ((Generator.width) / 2);
 	}
 
 	//Produces a ratio between 0 and 1 of how close this tile is to the center of the map on the y axis
 	public float YDistanceToCenterRatio ()
-	{
-		int width = Generator.width;
-		int height = Generator.height;
-
-		Tile centerTile = Generator.tileGrid[Mathf.RoundToInt (width / 2), Mathf.RoundToInt (height / 2)];
-
-		float distanceToCenterRatio;
+	{Tile centerTile = Generator.tileGrid[Mathf.RoundToInt (Generator.width / 2), Mathf.RoundToInt (Generator.height / 2)];
+		
 		float distanceFromCenterY = y - centerTile.y;
 
 		//Inverts negative values
@@ -164,8 +168,7 @@ public class Tile : MonoBehaviour {
 		{
 			distanceFromCenterY = distanceFromCenterY * -1;
 		}
-
-		distanceToCenterRatio = (distanceFromCenterY) / ((height) / 2);
-		return distanceToCenterRatio;
+		
+		return (distanceFromCenterY) / ((Generator.height) / 2);
 	}
 }

@@ -65,7 +65,7 @@ public class Generator : MonoBehaviour {
 		GenerateSeed ();
 		GenerateWorld ();
 		AddWaterAtEdges ();
-		GetTileArray ();
+		FillTileArray ();
 		GroupLandTiles (smoothFactor);
 		CreateLandmass ();
 	}
@@ -77,7 +77,7 @@ public class Generator : MonoBehaviour {
 	}
 
     //Gets all of the tile components from the tiles and stores them in an array
-	void GetTileArray ()
+	void FillTileArray ()
 	{
         int xLength = tileGridGameObjects.GetLength(0);
         int yLength = tileGridGameObjects.GetLength(1);
@@ -112,11 +112,11 @@ public class Generator : MonoBehaviour {
             {
                 for (int y = 0; y < yLength; y++)
                 {
-                    if (tileGrid[x, y].GetNeighourTilesOfType (Tile.Type.dirt).Length >= 3)
+                    if (tileGrid[x, y].GetNeighourTilesOfTypeNumber (Tile.Type.dirt) >= 3)
                     {
 						tileGrid[x, y].ChangeTileType(Tile.Type.dirt);
                     }
-                    else if (tileGrid[x, y].GetNeighourTilesOfType (Tile.Type.water).Length == 4)
+                    else if (tileGrid[x, y].GetNeighourTilesOfTypeNumber (Tile.Type.water) == 4)
                     {
 						tileGrid[x, y].ChangeTileType(Tile.Type.water);
                     }
@@ -166,9 +166,8 @@ public class Generator : MonoBehaviour {
 			for (int y = 0; y < height; y++)
 			{
 				perlinNoise = Mathf.PerlinNoise (seed + (x * 2f), seed + (y * 2f));
-				float thisWaterChance = waterChance;
 
-				if (perlinNoise < thisWaterChance)
+				if (perlinNoise < waterChance)
 				{
                     GenerateTile(x, y, Tile.Type.water);
                 }
