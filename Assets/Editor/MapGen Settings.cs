@@ -61,22 +61,22 @@ public class MapGenSettings : EditorWindow
 	//Draws GUI
 	void OnGUI ()
 	{
-		GUILayout.Label ("Generator Settings (SET WIDTH & HEIGHT BEFORE FIRST GENERATION)", EditorStyles.boldLabel);
+//		GUILayout.Label ("Generator Settings (SET WIDTH & HEIGHT BEFORE FIRST GENERATION)", EditorStyles.boldLabel);
+//
+//		mapWidthField = EditorGUILayout.TextField ("Map Width", mapWidthField);
+//		mapHeightField = EditorGUILayout.TextField ("Map Height", mapHeightField);
+//		waterSpawnChanceField = EditorGUILayout.TextField ("Water Spawn Chance", waterSpawnChanceField);
+//		edgeCullingFactorField = EditorGUILayout.TextField ("Edge Culling Factor", edgeCullingFactorField);
+//		mapSmoothingFactorField = EditorGUILayout.TextField ("Map Smoothing Factor", mapSmoothingFactorField);
 
-		mapWidthField = EditorGUILayout.TextField ("Map Width", mapWidthField);
-		mapHeightField = EditorGUILayout.TextField ("Map Height", mapHeightField);
-		waterSpawnChanceField = EditorGUILayout.TextField ("Water Spawn Chance", waterSpawnChanceField);
-		edgeCullingFactorField = EditorGUILayout.TextField ("Edge Culling Factor", edgeCullingFactorField);
-		mapSmoothingFactorField = EditorGUILayout.TextField ("Map Smoothing Factor", mapSmoothingFactorField);
+//		if (GUILayout.Button ("Set Values"))
+//		{
+//			SetValues ();
+//		}
 
-		if (GUILayout.Button ("Set Values"))
-		{
-			SetValues ();
-		}
-
-		if (GUILayout.Button ("Set Values To Default"))
-		{
-			SetValuesToDefault ();
-		}
+//		if (GUILayout.Button ("Set Values To Default"))
+//		{
+//			SetValuesToDefault ();
+//		}
 	}
 }
